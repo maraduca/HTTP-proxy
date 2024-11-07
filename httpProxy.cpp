@@ -10,13 +10,15 @@
 
 HttpProxy::HttpProxy(int port) : port(port) {
    
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
+    {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
     int opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+    {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
@@ -69,7 +71,6 @@ void HttpProxy::handleConnect(int client_socket, int server_socket) {
         }
 
         if (FD_ISSET(server_socket, &readfds)) {
-            // Date de la server
             bytes_received = recv(server_socket, buffer, sizeof(buffer), 0);
             if (bytes_received <= 0) {
                 std::cout << "Conexiune închisă de server." << std::endl;
@@ -148,16 +149,17 @@ void HttpProxy::handleClient(int client_socket) {
         send(client_socket, response.c_str(), response.length(), 0);
 
         handleConnect(client_socket, server_socket);
-    } else {
-        // redirectionez
+    }
+         else 
+    {
+       
         forwardRequest(method, url, headers, client_socket);
     }
 }
 
-
 void HttpProxy::forwardRequest(const std::string &method, const std::string &url, const std::string &headers, int client_socket) {
     std::string host;
-    std::string port = "80"; //port http
+    std::string port = "80"; // Port HTTP implicit
     std::string path;
 
     if (url.find("http://") == 0) {
@@ -166,46 +168,60 @@ void HttpProxy::forwardRequest(const std::string &method, const std::string &url
         host = url.substr(start, end - start);
         path = url.substr(end);
     } else {
-        std::cerr << "er" << std::endl;
+        std::cerr << "Eroare: URL invalid." << std::endl;
         return; 
     }
+
 
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         perror("socket failed");
         return;
     }
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(stoi(port));
 
-    if (inet_pton(AF_INET, host.c_str(), &server_address.sin_addr) <= 0) {
-        perror("inet_pton failed");
+
+    struct addrinfo hints, *res;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; 
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(host.c_str(), port.c_str(), &hints, &res) != 0) {
+        perror("getaddrinfo failed");
+        close(server_socket);
         return;
     }
 
+    struct sockaddr_in server_address;
+    memcpy(&server_address, res->ai_addr, res->ai_addrlen);
+    freeaddrinfo(res); 
+
+    // Conectarea la serverul de destinație
     if (connect(server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
         perror("connect failed");
+        close(server_socket);
         return;
     }
 
+    // Crearea cererii HTTP
     std::string full_request = method + " " + path + " HTTP/1.1\r\n" +
                                "Host: " + host + "\r\n" +
+                               "Connection: close\r\n" +
                                headers + "\r\n";
 
-
+    // Trimiterea cererii către server
     send(server_socket, full_request.c_str(), full_request.length(), 0);
 
-
+    // Primirea și trimiterea răspunsului către client
     char response_buffer[4096] = {0};
     int bytes_received;
     while ((bytes_received = recv(server_socket, response_buffer, sizeof(response_buffer), 0)) > 0) {
-        send(client_socket, response_buffer, bytes_received, 0); // Trimite răspunsul înapoi clientului
+        send(client_socket, response_buffer, bytes_received, 0);
     }
 
-    close(server_socket); 
-    close(client_socket); 
+    close(server_socket); // Închidem conexiunea la server
+    close(client_socket); // Închidem conexiunea la client
 }
+
 
 void HttpProxy::start() {
     while (true) {
