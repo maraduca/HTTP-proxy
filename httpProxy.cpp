@@ -52,12 +52,13 @@ HttpProxy::HttpProxy(int port) : port(port)
             FD_SET(server_socket, &readfds);
             int max_sd = (client_socket > server_socket) ? client_socket : server_socket;
             int activity = select(max_sd + 1, &readfds, nullptr, nullptr, nullptr);
-
+            //astept sa primesc ceva din socketul
             if (activity < 0)
             {
                 perror("select error");
                 break;
             }
+            //verific date client
             if (FD_ISSET(client_socket, &readfds)) 
             {
                 bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
@@ -68,6 +69,7 @@ HttpProxy::HttpProxy(int port) : port(port)
                 }
                 send(server_socket, buffer, bytes_received, 0);
             }
+            //verific date de la server 
             if (FD_ISSET(server_socket, &readfds))
             {
                 bytes_received = recv(server_socket, buffer, sizeof(buffer), 0);
@@ -100,7 +102,7 @@ HttpProxy::HttpProxy(int port) : port(port)
         {
             headers += line + "\r\n";
         }
-        if (method == "CONNECT") 
+        if (method == "CONNECT") //https
         {
             std::string host;
             std::string port = "443"; 
