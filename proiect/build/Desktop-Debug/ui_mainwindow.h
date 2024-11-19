@@ -11,11 +11,12 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QStatusBar>
-#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -25,8 +26,8 @@ class Ui_MainWindow
 public:
     QWidget *centralwidget;
     QPushButton *startButton;
-    QTextEdit *logTextEdit;
     QPushButton *firefoxButton;
+    QTableWidget *logTableWidget;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -34,22 +35,22 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName("MainWindow");
-        MainWindow->resize(429, 387);
+        MainWindow->resize(976, 489);
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
         startButton = new QPushButton(centralwidget);
         startButton->setObjectName("startButton");
-        startButton->setGeometry(QRect(70, 270, 80, 23));
-        logTextEdit = new QTextEdit(centralwidget);
-        logTextEdit->setObjectName("logTextEdit");
-        logTextEdit->setGeometry(QRect(70, 40, 281, 221));
+        startButton->setGeometry(QRect(770, 390, 80, 23));
         firefoxButton = new QPushButton(centralwidget);
         firefoxButton->setObjectName("firefoxButton");
-        firefoxButton->setGeometry(QRect(270, 270, 80, 23));
+        firefoxButton->setGeometry(QRect(860, 390, 80, 23));
+        logTableWidget = new QTableWidget(centralwidget);
+        logTableWidget->setObjectName("logTableWidget");
+        logTableWidget->setGeometry(QRect(50, 30, 891, 341));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 429, 20));
+        menubar->setGeometry(QRect(0, 0, 976, 20));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName("statusbar");

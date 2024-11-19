@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>429</width>
-    <height>387</height>
+    <width>976</width>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="startButton">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>270</y>
+      <x>770</x>
+      <y>390</y>
       <width>80</width>
       <height>23</height>
      </rect>
@@ -27,21 +27,11 @@
      <string>startButton</string>
     </property>
    </widget>
-   <widget class="QTextEdit" name="logTextEdit">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>40</y>
-      <width>281</width>
-      <height>221</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="firefoxButton">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>270</y>
+      <x>860</x>
+      <y>390</y>
       <width>80</width>
       <height>23</height>
      </rect>
@@ -50,13 +40,23 @@
      <string>Firefox</string>
     </property>
    </widget>
+   <widget class="QTableWidget" name="logTableWidget">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>30</y>
+      <width>891</width>
+      <height>341</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>429</width>
+     <width>976</width>
      <height>20</height>
     </rect>
    </property>

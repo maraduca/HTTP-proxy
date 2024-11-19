@@ -39,6 +39,7 @@ void HttpProxy::onNewConnection()
 
 void HttpProxy::handleClient()
 {
+
     // Get the client socket from the sender object (QTcpSocket that triggered readyRead)
     QTcpSocket *clientSocket = qobject_cast<QTcpSocket *>(sender());
     if (!clientSocket) return;
