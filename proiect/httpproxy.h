@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QHash>
+#include "httprequest.h"
 
 class HttpProxy : public QObject
 {
@@ -12,8 +14,11 @@ class HttpProxy : public QObject
 public:
     explicit HttpProxy(int port, QObject *parent = nullptr);
     ~HttpProxy();
+
     bool start();
     void stop();
+
+    QHash<QString, HttpRequest> getCache() const;
 
 signals:
     void logMessage(const QString &msg);
@@ -21,11 +26,15 @@ signals:
 private slots:
     void onNewConnection();
     void handleClient();
-    void handleConnect(QTcpSocket *clientSocket, QTcpSocket *serverSocket);
 
 private:
     QTcpServer *server;
     int port;
+    QHash<QString, HttpRequest> cache;
+
+    void handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &request);
+    void addToCache(const HttpRequest &request);
+    void handleConnectionFailure(QTcpSocket *clientSocket, const QString &host, const QString &error);
 };
 
 #endif // HTTPPROXY_H

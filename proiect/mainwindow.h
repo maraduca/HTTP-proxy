@@ -2,45 +2,35 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "httpproxy.h"
 #include <QProcess>
-#include <vector>
-#include <QString>
+#include "httpproxy.h"
 
-namespace Ui {
-class MainWindow;
-}
-
-// Structura pentru a stoca un log entry
-struct LogEntry {
-    QString time;
-    QString type;
-    QString direction;
-    QString method;
-    QString url;
-};
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
-    void on_startButton_clicked();                // Pornește/Oprește serverul
-    void logMessage(const QString &msg);          // Afișează un mesaj de log în interfață
-    void setupLogTable();                         // Configurează tabelul pentru loguri
-    std::vector<LogEntry> parseLogs(const QString &logText); // Parsează logurile brute
-    void displayLogsInTable(const std::vector<LogEntry> &logs); // Afișează logurile în tabel
-    void on_firefoxButton_clicked();              // Deschide browser-ul Firefox
+    void logMessage(const QString &msg);
+    void displayCache();
+    void on_startButton_clicked();
+    void on_firefoxButton_clicked();
+    void onLogTableCellClicked(int row, int column);
 
 private:
-    Ui::MainWindow *ui;                           // Interfața grafică
-    HttpProxy *proxy;                             // Obiectul care gestionează proxy-ul HTTP
-    bool serverRunning;                           // Flag pentru statusul serverului
-    QProcess *process;                            // Proces pentru lansarea aplicațiilor externe
+    Ui::MainWindow *ui;
+    HttpProxy *proxy;
+    QProcess *process;
+    bool serverRunning;
+
+    void setupLogTable();
 };
 
 #endif // MAINWINDOW_H
