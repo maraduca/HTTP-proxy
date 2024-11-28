@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1244</width>
-    <height>646</height>
+    <height>689</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,7 +45,7 @@
      <rect>
       <x>50</x>
       <y>30</y>
-      <width>521</width>
+      <width>441</width>
       <height>501</height>
      </rect>
     </property>
@@ -56,14 +56,27 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>703</x>
-      <y>29</y>
-      <width>371</width>
-      <height>491</height>
+      <x>620</x>
+      <y>170</y>
+      <width>551</width>
+      <height>401</height>
      </rect>
     </property>
     <property name="autoFillBackground">
      <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="openFiltersButton">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>50</y>
+      <width>80</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PushButton</string>
     </property>
    </widget>
   </widget>

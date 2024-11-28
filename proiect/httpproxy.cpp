@@ -59,48 +59,18 @@ void HttpProxy::handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &r
 {
     QString url = request.getUrl();
 
+    // Verifică dacă cererea este deja în cache
     if (cache.contains(url)) {
-        HttpRequest cachedRequest = cache.value(url);
-        clientSocket->write(cachedRequest.getBody());
-        emit logMessage("Served from cache: " + url);
+        emit logMessage("Request already cached: " + url);
         return;
     }
 
-    QString host = url.mid(url.indexOf("://") + 3);
-    QString path = "/";
-    int pathIndex = host.indexOf('/');
-    if (pathIndex != -1) {
-        path = host.mid(pathIndex);
-        host = host.left(pathIndex);
-    }
+    // Salvează cererea în cache
+    emit logMessage("Caching request: " + url);
+    cache.insert(url, request);
 
-    QTcpSocket *serverSocket = new QTcpSocket(this);
-    connect(serverSocket, &QTcpSocket::readyRead, [=]() {
-        QByteArray serverResponse = serverSocket->readAll();
-        clientSocket->write(serverResponse);
-
-        HttpRequest cachedRequest = request;
-        cachedRequest.setBody(serverResponse);
-        cache.insert(url, cachedRequest);
-
-        emit logMessage("Response cached for URL: " + url + " (" + QString::number(serverResponse.size()) + " bytes)");
-    });
-
-    connect(serverSocket, &QTcpSocket::disconnected, serverSocket, &QTcpSocket::deleteLater);
-
-    serverSocket->connectToHost(host, 80);
-    if (!serverSocket->waitForConnected(5000)) {
-        handleConnectionFailure(clientSocket, host, serverSocket->errorString());
-        return;
-    }
-
-    QString fullRequest = request.getMethod() + " " + path + " HTTP/1.1\r\n" +
-                          "Host: " + host + "\r\n" +
-                          "Connection: close\r\n" +
-                          request.headersToRaw() + "\r\n";
-
-    serverSocket->write(fullRequest.toUtf8());
-    emit logMessage("Forwarded request: " + request.getMethod() + " " + url);
+    // Închide conexiunea clientului fără a trimite nimic
+    clientSocket->disconnectFromHost();
 }
 
 void HttpProxy::handleConnectionFailure(QTcpSocket *clientSocket, const QString &host, const QString &error)

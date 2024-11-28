@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QProcess>
 #include "httpproxy.h"
+#include "filterdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,6 +24,10 @@ private slots:
     void on_startButton_clicked();
     void on_firefoxButton_clicked();
     void onLogTableCellClicked(int row, int column);
+
+    void on_openFilterButton_clicked(); // Slot pentru butonul de filtre
+    void  applyFilter(const QString &criterion, const QString &filterText);
+
 
 private:
     Ui::MainWindow *ui;

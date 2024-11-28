@@ -9,23 +9,26 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    httpcache.cpp \
+    filterdialog.cpp \
     httpproxy.cpp \
     httprequest.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
-    httpcache.h \
+    filterdialog.h \
     httpproxy.h \
     httprequest.h \
     mainwindow.h
 
 FORMS += \
+    filterdialog.ui \
     httpproxy.ui \
     mainwindow.ui
 
 # Default rules for deployment.
+INCLUDEPATH += $$PWD
+
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target

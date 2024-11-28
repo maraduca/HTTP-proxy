@@ -23,6 +23,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->firefoxButton, &QPushButton::clicked, this, &MainWindow::on_firefoxButton_clicked);
 
     connect(ui->logTableWidget, &QTableWidget::cellClicked, this, &MainWindow::onLogTableCellClicked);
+    connect(ui->openFiltersButton , &QPushButton::clicked, this, &MainWindow::on_openFilterButton_clicked);
+
 }
 
 MainWindow::~MainWindow()
@@ -73,6 +75,48 @@ void MainWindow::logMessage(const QString &msg)
     ui->logTableWidget->setItem(row, 3, new QTableWidgetItem(method));    // Metoda (GET, POST, CONNECT)
     ui->logTableWidget->setItem(row, 4, new QTableWidgetItem(url));       // URL-ul
 }
+
+void MainWindow::on_openFilterButton_clicked()
+{
+    // Creează dialogul pentru configurarea filtrelor
+    FilterDialog filterDialog(this);
+
+    // Afișează dialogul și aplică filtrele dacă utilizatorul apasă "OK"
+    if (filterDialog.exec() == QDialog::Accepted) {
+        QString criterion = filterDialog.getCriterion();
+        QString filterText = filterDialog.getFilterText();
+
+        // Aplică filtrele pe tabel
+        applyFilter(criterion, filterText);
+    }
+}
+
+void MainWindow::applyFilter(const QString &method, const QString &filterText)
+{
+    for (int row = 0; row < ui->logTableWidget->rowCount(); ++row) {
+        bool match = false;
+
+        // Filtrare pe baza metodei
+        if (!method.isEmpty()) {
+            QTableWidgetItem *methodItem = ui->logTableWidget->item(row, 3); // Coloana Metoda
+            if (methodItem && methodItem->text() == method) {
+                match = true;
+            }
+        }
+
+        // Filtrare pe baza textului (de exemplu, URL sau alte câmpuri)
+        if (!filterText.isEmpty()) {
+            QTableWidgetItem *urlItem = ui->logTableWidget->item(row, 4); // Coloana URL
+            if (urlItem && urlItem->text().contains(filterText, Qt::CaseInsensitive)) {
+                match = true;
+            }
+        }
+
+        // Ascunde rândul dacă nu se potrivește
+        ui->logTableWidget->setRowHidden(row, !match);
+    }
+}
+
 
 void MainWindow::onLogTableCellClicked(int row, int column)
 {
