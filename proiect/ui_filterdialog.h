@@ -14,7 +14,10 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QTableWidget>
 
 QT_BEGIN_NAMESPACE
 
@@ -22,25 +25,53 @@ class Ui_FilterDialog
 {
 public:
     QDialogButtonBox *buttonBox;
-    QComboBox *methodComboBox;
-    QLineEdit *filterLineEdit;
+    QLineEdit *lineEditUrl;
+    QLineEdit *lineEditHeaderKey;
+    QTableWidget *RulesTableWidget;
+    QLineEdit *lineEditHeaderValue;
+    QComboBox *ActionComboBox;
+    QPushButton *addRuleButton;
+    QPushButton *DeleteRuleButton;
+    QPushButton *editRuleButton;
+    QPushButton *SaveButton;
 
     void setupUi(QDialog *FilterDialog)
     {
         if (FilterDialog->objectName().isEmpty())
             FilterDialog->setObjectName(QString::fromUtf8("FilterDialog"));
-        FilterDialog->resize(400, 300);
+        FilterDialog->resize(832, 617);
         buttonBox = new QDialogButtonBox(FilterDialog);
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
-        buttonBox->setGeometry(QRect(30, 240, 341, 32));
+        buttonBox->setGeometry(QRect(600, 540, 181, 32));
         buttonBox->setOrientation(Qt::Orientation::Horizontal);
         buttonBox->setStandardButtons(QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok);
-        methodComboBox = new QComboBox(FilterDialog);
-        methodComboBox->setObjectName(QString::fromUtf8("methodComboBox"));
-        methodComboBox->setGeometry(QRect(130, 130, 121, 23));
-        filterLineEdit = new QLineEdit(FilterDialog);
-        filterLineEdit->setObjectName(QString::fromUtf8("filterLineEdit"));
-        filterLineEdit->setGeometry(QRect(80, 80, 221, 22));
+        lineEditUrl = new QLineEdit(FilterDialog);
+        lineEditUrl->setObjectName(QString::fromUtf8("lineEditUrl"));
+        lineEditUrl->setGeometry(QRect(80, 340, 331, 22));
+        lineEditHeaderKey = new QLineEdit(FilterDialog);
+        lineEditHeaderKey->setObjectName(QString::fromUtf8("lineEditHeaderKey"));
+        lineEditHeaderKey->setGeometry(QRect(80, 380, 331, 22));
+        RulesTableWidget = new QTableWidget(FilterDialog);
+        RulesTableWidget->setObjectName(QString::fromUtf8("RulesTableWidget"));
+        RulesTableWidget->setGeometry(QRect(10, 40, 791, 271));
+        lineEditHeaderValue = new QLineEdit(FilterDialog);
+        lineEditHeaderValue->setObjectName(QString::fromUtf8("lineEditHeaderValue"));
+        lineEditHeaderValue->setGeometry(QRect(80, 420, 331, 22));
+        ActionComboBox = new QComboBox(FilterDialog);
+        ActionComboBox->setObjectName(QString::fromUtf8("ActionComboBox"));
+        ActionComboBox->setGeometry(QRect(170, 470, 141, 23));
+        addRuleButton = new QPushButton(FilterDialog);
+        addRuleButton->setObjectName(QString::fromUtf8("addRuleButton"));
+        addRuleButton->setGeometry(QRect(630, 340, 80, 23));
+        DeleteRuleButton = new QPushButton(FilterDialog);
+        DeleteRuleButton->setObjectName(QString::fromUtf8("DeleteRuleButton"));
+        DeleteRuleButton->setGeometry(QRect(630, 390, 80, 23));
+        editRuleButton = new QPushButton(FilterDialog);
+        editRuleButton->setObjectName(QString::fromUtf8("editRuleButton"));
+        editRuleButton->setGeometry(QRect(630, 440, 80, 23));
+        SaveButton = new QPushButton(FilterDialog);
+        SaveButton->setObjectName(QString::fromUtf8("SaveButton"));
+        SaveButton->setGeometry(QRect(290, 570, 80, 23));
 
         retranslateUi(FilterDialog);
         QObject::connect(buttonBox, SIGNAL(accepted()), FilterDialog, SLOT(accept()));
@@ -52,6 +83,10 @@ public:
     void retranslateUi(QDialog *FilterDialog)
     {
         FilterDialog->setWindowTitle(QCoreApplication::translate("FilterDialog", "Dialog", nullptr));
+        addRuleButton->setText(QCoreApplication::translate("FilterDialog", "Add Rule", nullptr));
+        DeleteRuleButton->setText(QCoreApplication::translate("FilterDialog", "Delete Rule", nullptr));
+        editRuleButton->setText(QCoreApplication::translate("FilterDialog", "Edit Rule", nullptr));
+        SaveButton->setText(QCoreApplication::translate("FilterDialog", "Save", nullptr));
     } // retranslateUi
 
 };

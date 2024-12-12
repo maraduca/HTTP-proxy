@@ -12,6 +12,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    loadRulesFromFile("rules.json");
+
+
+    proxy->setFilterRules(filterRules);
     setupLogTable();
 
       ui->detailsTextEdit->setVisible(false);
@@ -23,7 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->firefoxButton, &QPushButton::clicked, this, &MainWindow::on_firefoxButton_clicked);
 
     connect(ui->logTableWidget, &QTableWidget::cellClicked, this, &MainWindow::onLogTableCellClicked);
-    connect(ui->openFiltersButton , &QPushButton::clicked, this, &MainWindow::on_openFilterButton_clicked);
+ //   connect(ui->openFiltersButton , &QPushButton::clicked, this, &MainWindow::on_openFilterButton_clicked);
+    connect(ui->openFiltersButton, &QPushButton::clicked, this, &MainWindow::on_openFiltersButton_clicked);
 
 }
 
@@ -76,20 +81,7 @@ void MainWindow::logMessage(const QString &msg)
     ui->logTableWidget->setItem(row, 4, new QTableWidgetItem(url));       // URL-ul
 }
 
-void MainWindow::on_openFilterButton_clicked()
-{
-    // Creează dialogul pentru configurarea filtrelor
-    FilterDialog filterDialog(this);
 
-    // Afișează dialogul și aplică filtrele dacă utilizatorul apasă "OK"
-    if (filterDialog.exec() == QDialog::Accepted) {
-        QString criterion = filterDialog.getCriterion();
-        QString filterText = filterDialog.getFilterText();
-
-        // Aplică filtrele pe tabel
-        applyFilter(criterion, filterText);
-    }
-}
 
 void MainWindow::applyFilter(const QString &method, const QString &filterText)
 {
@@ -176,6 +168,50 @@ void MainWindow::displayCache()
         ui->logTableWidget->setItem(row, 3, new QTableWidgetItem(request.getMethod())); // Metoda
         ui->logTableWidget->setItem(row, 4, new QTableWidgetItem(request.getUrl()));    // URL-ul
     }
+}
+
+
+void MainWindow::saveRulesToFile(const QString &filePath) {
+    QJsonArray rulesArray;
+    for (const FilterRule &rule : filterRules) {
+        rulesArray.append(rule.toJson());
+    }
+
+    QJsonDocument doc(rulesArray);
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(doc.toJson());
+    }
+}
+
+void MainWindow::loadRulesFromFile(const QString &filePath) {
+    QFile file(filePath);
+    if (file.open(QIODevice::ReadOnly)) {
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+        QJsonArray rulesArray = doc.array();
+
+        filterRules.clear();
+        for (const auto &value : rulesArray) {
+            filterRules.append(FilterRule::fromJson(value.toObject()));
+        }
+    }
+}
+
+void MainWindow::on_openFiltersButton_clicked() {
+    FilterDialog dialog(this);
+
+    // Populează tabelul din dialog cu regulile existente
+    dialog.updateRulesTable(filterRules);
+
+    // Conectează semnalul rulesUpdated la funcția pentru actualizare
+    connect(&dialog, &FilterDialog::rulesUpdated, this, [this](const QList<FilterRule> &rules) {
+        filterRules = rules;                // Actualizează lista de reguli
+        saveRulesToFile("rules.json");      // Salvează regulile în fișier
+        proxy->setFilterRules(filterRules); // Trimite regulile la proxy
+    });
+
+    // Deschide dialogul și așteaptă
+    dialog.exec();
 }
 
 void MainWindow::on_startButton_clicked()

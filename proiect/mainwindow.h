@@ -25,8 +25,9 @@ private slots:
     void on_firefoxButton_clicked();
     void onLogTableCellClicked(int row, int column);
 
-    void on_openFilterButton_clicked(); // Slot pentru butonul de filtre
     void  applyFilter(const QString &criterion, const QString &filterText);
+
+     void on_openFiltersButton_clicked();
 
 
 private:
@@ -36,6 +37,10 @@ private:
     bool serverRunning;
 
     void setupLogTable();
+    QList<FilterRule> filterRules;
+
+    void saveRulesToFile(const QString &filePath);
+    void loadRulesFromFile(const QString &filePath);
 };
 
 #endif // MAINWINDOW_H

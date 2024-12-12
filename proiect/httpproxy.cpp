@@ -1,6 +1,7 @@
 #include "httpproxy.h"
 #include <QHostAddress>
 #include <QDebug>
+#include <QRegularExpression>
 
 HttpProxy::HttpProxy(int port, QObject *parent)
     : QObject(parent), server(new QTcpServer(this)), port(port)
@@ -22,6 +23,28 @@ bool HttpProxy::start()
     emit logMessage("Server listening on port " + QString::number(port));
     return true;
 }
+
+bool HttpProxy::shouldBlockRequest(const QString &url, const QHash<QString, QString> &headers) {
+    for (const FilterRule &rule : filterRules) {
+        // Verifică URL Pattern
+        if (!rule.urlPattern.isEmpty() && url.contains(QRegularExpression(rule.urlPattern))) {
+            // Verifică Header Key și Value (dacă există)
+            if (!rule.headerKey.isEmpty()) {
+                if (headers.contains(rule.headerKey)) {
+                    if (rule.headerValue.isEmpty() || headers.value(rule.headerKey).contains(rule.headerValue)) {
+                        return rule.block; // Blocăm sau permitem cererea, conform regulii
+                    }
+                }
+            } else {
+                // Doar URL-ul se potrivește, decidem pe baza flag-ului `block`
+                return rule.block;
+            }
+        }
+    }
+
+    return false; // Dacă nicio regulă nu se potrivește, nu blocăm cererea
+}
+
 
 void HttpProxy::stop()
 {
@@ -55,9 +78,21 @@ void HttpProxy::handleClient()
     handleHttpRequest(clientSocket, request);
 }
 
+void HttpProxy::setFilterRules(const QList<FilterRule> &rules) {
+    filterRules = rules;
+}
+
+
 void HttpProxy::handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &request)
 {
     QString url = request.getUrl();
+
+    // if (shouldBlockRequest(url, this.)) {
+    //     emit logMessage("Blocked request to: " + url);
+    //     clientSocket->write("HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n");
+    //     clientSocket->disconnectFromHost();
+    //     return;
+    // }
 
     // Verifică dacă cererea este deja în cache
     if (cache.contains(url)) {
