@@ -5,6 +5,7 @@
 #include <QString>
 #include <QList>
 #include <QHash>
+#include <QDebug>
 
 class HttpRequest {
     QString method;
@@ -13,26 +14,26 @@ class HttpRequest {
     QByteArray body; // Cererea inițială sau răspunsul serverului
 
 public:
-    // Constructori
+
     HttpRequest(const QString &method = "", const QString &url = "",
                 const QHash<QString, QString> &headers = {}, const QByteArray &body = {});
 
-    // Getteri
     QString getMethod() const;
     QString getUrl() const;
     QHash<QString, QString> getHeaders() const;
     QByteArray getBody() const;
 
-    // Setteri
+
     void setBody(const QByteArray &newBody);
 
-    // Funcții statice pentru parsare
+
     static HttpRequest parse(const QByteArray &rawRequest);
     static QHash<QString, QString> parseHeaders(const QByteArray &rawHeaders);
 
     // Funcții pentru serializare
     QByteArray headersToRaw() const;
     QByteArray toRawRequest() const;
+    void debugPrint()const ;
 };
 
 

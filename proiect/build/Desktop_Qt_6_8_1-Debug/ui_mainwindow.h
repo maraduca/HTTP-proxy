@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 5.15.13
+** Created by: Qt User Interface Compiler version 6.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -37,34 +37,34 @@ public:
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
-            MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
+            MainWindow->setObjectName("MainWindow");
         MainWindow->resize(1244, 689);
         centralwidget = new QWidget(MainWindow);
-        centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
+        centralwidget->setObjectName("centralwidget");
         startButton = new QPushButton(centralwidget);
-        startButton->setObjectName(QString::fromUtf8("startButton"));
+        startButton->setObjectName("startButton");
         startButton->setGeometry(QRect(140, 590, 80, 23));
         firefoxButton = new QPushButton(centralwidget);
-        firefoxButton->setObjectName(QString::fromUtf8("firefoxButton"));
+        firefoxButton->setObjectName("firefoxButton");
         firefoxButton->setGeometry(QRect(360, 590, 80, 23));
         logTableWidget = new QTableWidget(centralwidget);
-        logTableWidget->setObjectName(QString::fromUtf8("logTableWidget"));
-        logTableWidget->setGeometry(QRect(0, 80, 721, 471));
+        logTableWidget->setObjectName("logTableWidget");
+        logTableWidget->setGeometry(QRect(10, 80, 721, 471));
         detailsTextEdit = new QTextEdit(centralwidget);
-        detailsTextEdit->setObjectName(QString::fromUtf8("detailsTextEdit"));
+        detailsTextEdit->setObjectName("detailsTextEdit");
         detailsTextEdit->setEnabled(true);
         detailsTextEdit->setGeometry(QRect(840, 140, 361, 461));
         detailsTextEdit->setAutoFillBackground(false);
         ForwardpushButton = new QPushButton(centralwidget);
-        ForwardpushButton->setObjectName(QString::fromUtf8("ForwardpushButton"));
+        ForwardpushButton->setObjectName("ForwardpushButton");
         ForwardpushButton->setGeometry(QRect(130, 30, 131, 26));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
-        menubar->setObjectName(QString::fromUtf8("menubar"));
+        menubar->setObjectName("menubar");
         menubar->setGeometry(QRect(0, 0, 1244, 23));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
-        statusbar->setObjectName(QString::fromUtf8("statusbar"));
+        statusbar->setObjectName("statusbar");
         MainWindow->setStatusBar(statusbar);
 
         retranslateUi(MainWindow);

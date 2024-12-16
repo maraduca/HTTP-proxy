@@ -43,10 +43,10 @@
    <widget class="QTableWidget" name="logTableWidget">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>50</y>
+      <x>10</x>
+      <y>80</y>
       <width>721</width>
-      <height>501</height>
+      <height>471</height>
      </rect>
     </property>
    </widget>
@@ -66,17 +66,17 @@
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="openFiltersButton">
+   <widget class="QPushButton" name="ForwardpushButton">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>50</y>
-      <width>80</width>
-      <height>23</height>
+      <x>130</x>
+      <y>30</y>
+      <width>131</width>
+      <height>26</height>
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>Forward</string>
     </property>
    </widget>
   </widget>
@@ -86,7 +86,7 @@
      <x>0</x>
      <y>0</y>
      <width>1244</width>
-     <height>20</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>

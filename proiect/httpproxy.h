@@ -6,7 +6,7 @@
 #include <QTcpSocket>
 #include <QHash>
 #include "httprequest.h"
-#include "filterdialog.h"
+
 
 class HttpProxy : public QObject
 {
@@ -20,7 +20,11 @@ public:
     void stop();
 
     QHash<QString, HttpRequest> getCache() const;
-         void setFilterRules(const QList<FilterRule> &rules);
+    void writeToFile(const HttpRequest &request, const QString &status);
+
+    void forwardRequest(const HttpRequest &request);
+    void forwardAllRequests();
+
 
 signals:
     void logMessage(const QString &msg);
@@ -33,12 +37,13 @@ private:
     QTcpServer *server;
     int port;
     QHash<QString, HttpRequest> cache;
-     QList<FilterRule> filterRules;
 
     void handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &request);
     void addToCache(const HttpRequest &request);
     void handleConnectionFailure(QTcpSocket *clientSocket, const QString &host, const QString &error);
-    bool shouldBlockRequest(const QString &url, const QHash<QString, QString> &headers) ;
+    bool shouldBlockRequest(const QString &url) ;
+
+
 
 };
 

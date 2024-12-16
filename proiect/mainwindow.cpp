@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QDateTime>
 #include <QDebug>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -11,26 +12,22 @@ MainWindow::MainWindow(QWidget *parent)
     serverRunning(false)
 {
     ui->setupUi(this);
-
-    loadRulesFromFile("rules.json");
-
-
-    proxy->setFilterRules(filterRules);
     setupLogTable();
 
-      ui->detailsTextEdit->setVisible(false);
+    ui->detailsTextEdit->setVisible(false);
 
-    // Conectăm logurile proxy-ului la tabelul interfeței
     connect(proxy, &HttpProxy::logMessage, this, &MainWindow::logMessage);
 
     // Conectăm butonul pentru deschiderea Firefox-ului
     connect(ui->firefoxButton, &QPushButton::clicked, this, &MainWindow::on_firefoxButton_clicked);
 
     connect(ui->logTableWidget, &QTableWidget::cellClicked, this, &MainWindow::onLogTableCellClicked);
- //   connect(ui->openFiltersButton , &QPushButton::clicked, this, &MainWindow::on_openFilterButton_clicked);
-    connect(ui->openFiltersButton, &QPushButton::clicked, this, &MainWindow::on_openFiltersButton_clicked);
+    //   connect(ui->openFiltersButton , &QPushButton::clicked, this, &MainWindow::on_openFilterButton_clicked);
+      connect(ui->ForwardpushButton, &QPushButton::clicked, this, &MainWindow::on_ForwardpushButton_clicked);
 
 }
+
+
 
 MainWindow::~MainWindow()
 {
@@ -46,15 +43,23 @@ void MainWindow::setupLogTable()
     ui->logTableWidget->setSelectionBehavior(QTableWidget::SelectRows);
     ui->logTableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
 }
+
 void MainWindow::logMessage(const QString &msg)
 {
     // Listează metodele HTTP relevante
     QStringList allowedMethods = { "GET", "POST", "CONNECT" };
 
+    // Exclude mesajele care nu sunt cereri HTTP
+    if (!msg.startsWith("Incoming") && !msg.startsWith("Processed")) {
+        // Mesaje generale, doar le afișăm în debug și ieșim
+        qDebug() << msg;
+        return;
+    }
+
     // Împarte mesajul în componente
     QStringList parts = msg.split(' ', Qt::SkipEmptyParts);
     if (parts.size() < 3) {
-        qDebug() << "Invalid log format:" << msg;
+       // qDebug() << "Invalid log format:" << msg;
         return;
     }
 
@@ -77,37 +82,13 @@ void MainWindow::logMessage(const QString &msg)
     ui->logTableWidget->setItem(row, 0, new QTableWidgetItem(QDateTime::currentDateTime().toString())); // Timpul
     ui->logTableWidget->setItem(row, 1, new QTableWidgetItem(type));      // Tipul (HTTP/HTTPS)
     ui->logTableWidget->setItem(row, 2, new QTableWidgetItem(direction)); // Direcția (Incoming/Outgoing)
-    ui->logTableWidget->setItem(row, 3, new QTableWidgetItem(method));    // Metoda (GET, POST, CONNECT)
+    ui->logTableWidget->setItem(row, 3, new QTableWidgetItem(method));    // Metoda
     ui->logTableWidget->setItem(row, 4, new QTableWidgetItem(url));       // URL-ul
 }
 
 
 
-void MainWindow::applyFilter(const QString &method, const QString &filterText)
-{
-    for (int row = 0; row < ui->logTableWidget->rowCount(); ++row) {
-        bool match = false;
 
-        // Filtrare pe baza metodei
-        if (!method.isEmpty()) {
-            QTableWidgetItem *methodItem = ui->logTableWidget->item(row, 3); // Coloana Metoda
-            if (methodItem && methodItem->text() == method) {
-                match = true;
-            }
-        }
-
-        // Filtrare pe baza textului (de exemplu, URL sau alte câmpuri)
-        if (!filterText.isEmpty()) {
-            QTableWidgetItem *urlItem = ui->logTableWidget->item(row, 4); // Coloana URL
-            if (urlItem && urlItem->text().contains(filterText, Qt::CaseInsensitive)) {
-                match = true;
-            }
-        }
-
-        // Ascunde rândul dacă nu se potrivește
-        ui->logTableWidget->setRowHidden(row, !match);
-    }
-}
 
 
 void MainWindow::onLogTableCellClicked(int row, int column)
@@ -171,48 +152,11 @@ void MainWindow::displayCache()
 }
 
 
-void MainWindow::saveRulesToFile(const QString &filePath) {
-    QJsonArray rulesArray;
-    for (const FilterRule &rule : filterRules) {
-        rulesArray.append(rule.toJson());
-    }
 
-    QJsonDocument doc(rulesArray);
-    QFile file(filePath);
-    if (file.open(QIODevice::WriteOnly)) {
-        file.write(doc.toJson());
-    }
-}
 
-void MainWindow::loadRulesFromFile(const QString &filePath) {
-    QFile file(filePath);
-    if (file.open(QIODevice::ReadOnly)) {
-        QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-        QJsonArray rulesArray = doc.array();
 
-        filterRules.clear();
-        for (const auto &value : rulesArray) {
-            filterRules.append(FilterRule::fromJson(value.toObject()));
-        }
-    }
-}
 
-void MainWindow::on_openFiltersButton_clicked() {
-    FilterDialog dialog(this);
 
-    // Populează tabelul din dialog cu regulile existente
-    dialog.updateRulesTable(filterRules);
-
-    // Conectează semnalul rulesUpdated la funcția pentru actualizare
-    connect(&dialog, &FilterDialog::rulesUpdated, this, [this](const QList<FilterRule> &rules) {
-        filterRules = rules;                // Actualizează lista de reguli
-        saveRulesToFile("rules.json");      // Salvează regulile în fișier
-        proxy->setFilterRules(filterRules); // Trimite regulile la proxy
-    });
-
-    // Deschide dialogul și așteaptă
-    dialog.exec();
-}
 
 void MainWindow::on_startButton_clicked()
 {
@@ -230,6 +174,11 @@ void MainWindow::on_startButton_clicked()
 
 void MainWindow::on_firefoxButton_clicked()
 {
+    if (process->state() == QProcess::Running) {
+        qDebug() << "Firefox is already running.";
+        return;
+    }
+
     process->start("/usr/bin/firefox");
     if (!process->waitForStarted()) {
         qDebug() << "Failed to open Firefox.";
@@ -237,3 +186,47 @@ void MainWindow::on_firefoxButton_clicked()
         qDebug() << "Mozilla Firefox opened successfully.";
     }
 }
+
+
+void MainWindow::on_ForwardpushButton_clicked()
+{
+    int selectedRow = ui->logTableWidget->currentRow();
+
+    if (selectedRow >= 0) {
+        // Forward cerere selectată
+        QTableWidgetItem *urlItem = ui->logTableWidget->item(selectedRow, 4);
+        if (!urlItem) {
+            QMessageBox::warning(this, "Error", "Failed to retrieve the selected request.");
+            return;
+        }
+
+        QString url = urlItem->text();
+        QHash<QString, HttpRequest> cache = proxy->getCache();
+
+        if (cache.contains(url)) {
+            HttpRequest request = cache.value(url);
+            request.debugPrint(); // Loghează detalii cerere
+
+            // Forward cererea
+            proxy->forwardRequest(request);
+
+            // Șterge cererea din tabel și din cache
+            ui->logTableWidget->removeRow(selectedRow);
+            cache.remove(url); // Asigură-te că cererea este ștearsă
+
+            emit logMessage("Forwarded request: " + url);
+        } else {
+            QMessageBox::warning(this, "Error", "Request not found in cache.");
+        }
+    } else {
+        // Forward toate cererile din cache
+        proxy->forwardAllRequests();
+
+        // Golește tabelul
+        ui->logTableWidget->setRowCount(0);
+
+        emit logMessage("Forwarded all requests.");
+    }
+}
+
+
