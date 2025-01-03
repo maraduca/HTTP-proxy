@@ -55,12 +55,14 @@ OBJECTS_DIR   = ./
 SOURCES       = ../../httpproxy.cpp \
 		../../httprequest.cpp \
 		../../main.cpp \
-		../../mainwindow.cpp moc_httpproxy.cpp \
+		../../mainwindow.cpp \
+		../../threadpool.cpp moc_httpproxy.cpp \
 		moc_mainwindow.cpp
 OBJECTS       = httpproxy.o \
 		httprequest.o \
 		main.o \
 		mainwindow.o \
+		threadpool.o \
 		moc_httpproxy.o \
 		moc_mainwindow.o
 DIST          = /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/spec_pre.prf \
@@ -274,7 +276,7 @@ DIST          = /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/spec_pre.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/qt_config.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++/qmake.conf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/spec_post.prf \
-		../../.qmake.stash \
+		../../../../.qmake.stash \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/exclusive_builds.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/toolchain.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/default_pre.prf \
@@ -298,10 +300,12 @@ DIST          = /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/spec_pre.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/lex.prf \
 		../../../../proiect.pro ../../httpproxy.h \
 		../../httprequest.h \
-		../../mainwindow.h ../../httpproxy.cpp \
+		../../mainwindow.h \
+		../../threadpool.h ../../httpproxy.cpp \
 		../../httprequest.cpp \
 		../../main.cpp \
-		../../mainwindow.cpp
+		../../mainwindow.cpp \
+		../../threadpool.cpp
 QMAKE_TARGET  = proiect
 DESTDIR       = 
 TARGET        = proiect
@@ -524,7 +528,7 @@ Makefile: ../../proiect.pro /home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++/qmake.c
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/qt_config.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++/qmake.conf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/spec_post.prf \
-		.qmake.stash \
+		../../.qmake.stash \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/exclusive_builds.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/toolchain.prf \
 		/home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/default_pre.prf \
@@ -763,7 +767,7 @@ Makefile: ../../proiect.pro /home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++/qmake.c
 /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/qt_config.prf:
 /home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++/qmake.conf:
 /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/spec_post.prf:
-.qmake.stash:
+../../.qmake.stash:
 /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/exclusive_builds.prf:
 /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/toolchain.prf:
 /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/default_pre.prf:
@@ -805,8 +809,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /home/iuli/Qt/6.8.1/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../../httpproxy.h ../../httprequest.h ../../mainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../../httpproxy.cpp ../../httprequest.cpp ../../main.cpp ../../mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../../httpproxy.h ../../httprequest.h ../../mainwindow.h ../../threadpool.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../../httpproxy.cpp ../../httprequest.cpp ../../main.cpp ../../mainwindow.cpp ../../threadpool.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../../httpproxy.ui ../../mainwindow.ui $(DISTDIR)/
 
 
@@ -817,7 +821,6 @@ clean: compiler_clean
 
 distclean: clean 
 	-$(DEL_FILE) $(TARGET) 
-	-$(DEL_FILE) .qmake.stash
 	-$(DEL_FILE) Makefile
 
 
@@ -972,6 +975,8 @@ moc_httpproxy.cpp: ../../httpproxy.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QByteArray \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QString \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QList \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
+		../../threadpool.h \
 		moc_predefs.h \
 		/home/iuli/Qt/6.8.1/gcc_64/libexec/moc
 	/home/iuli/Qt/6.8.1/gcc_64/libexec/moc $(DEFINES) --include /home/iuli/proiect/HTTP-proxy/proiect/build/Desktop_Qt_6_8_1-Debug/moc_predefs.h -I/home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++ -I/home/iuli/proiect/HTTP-proxy/proiect -I/home/iuli/proiect/HTTP-proxy/proiect -I/home/iuli/Qt/6.8.1/gcc_64/include -I/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets -I/home/iuli/Qt/6.8.1/gcc_64/include/QtGui -I/home/iuli/Qt/6.8.1/gcc_64/include/QtNetwork -I/home/iuli/Qt/6.8.1/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../httpproxy.h -o moc_httpproxy.cpp
@@ -1183,6 +1188,8 @@ moc_mainwindow.cpp: ../../mainwindow.h \
 		../../httprequest.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QByteArray \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QString \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
+		../../threadpool.h \
 		moc_predefs.h \
 		/home/iuli/Qt/6.8.1/gcc_64/libexec/moc
 	/home/iuli/Qt/6.8.1/gcc_64/libexec/moc $(DEFINES) --include /home/iuli/proiect/HTTP-proxy/proiect/build/Desktop_Qt_6_8_1-Debug/moc_predefs.h -I/home/iuli/Qt/6.8.1/gcc_64/mkspecs/linux-g++ -I/home/iuli/proiect/HTTP-proxy/proiect -I/home/iuli/proiect/HTTP-proxy/proiect -I/home/iuli/Qt/6.8.1/gcc_64/include -I/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets -I/home/iuli/Qt/6.8.1/gcc_64/include/QtGui -I/home/iuli/Qt/6.8.1/gcc_64/include/QtNetwork -I/home/iuli/Qt/6.8.1/gcc_64/include/QtCore -I. -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../../mainwindow.h -o moc_mainwindow.cpp
@@ -1342,8 +1349,9 @@ httpproxy.o: ../../httpproxy.cpp ../../httpproxy.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QByteArray \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QString \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QList \
-		/home/iuli/Qt/6.8.1/gcc_64/include/QtNetwork/QHostAddress \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
+		../../threadpool.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtNetwork/QHostAddress \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QRegularExpression \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qregularexpression.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDir \
@@ -1356,6 +1364,7 @@ httpproxy.o: ../../httpproxy.cpp ../../httpproxy.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qfile.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qfileinfo.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qtimezone.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDateTime \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/QMessageBox \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/qmessagebox.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
@@ -1519,7 +1528,32 @@ httprequest.o: ../../httprequest.cpp ../../httprequest.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qalgorithms.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qstringmatcher.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QHash \
-		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qhash.h
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qhash.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qdebug.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qtextstream.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qiodevicebase.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qscopedpointer.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qcontiguouscache.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qsharedpointer.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qshareddata.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qsharedpointer_impl.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qmetatype.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qdatastream.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qfloat16.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qmath.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qiterable.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qmetacontainer.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qcontainerinfo.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qtaggedpointer.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qobjectdefs.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qfunctionaltools_impl.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qscopeguard.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qmap.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qshareddata_impl.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qset.h \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qvarlengtharray.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o httprequest.o ../../httprequest.cpp
 
 main.o: ../../main.cpp ../../mainwindow.h \
@@ -1729,6 +1763,8 @@ main.o: ../../main.cpp ../../mainwindow.h \
 		../../httprequest.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QByteArray \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QString \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
+		../../threadpool.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/QApplication \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/qapplication.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../../main.cpp
@@ -1940,6 +1976,8 @@ mainwindow.o: ../../mainwindow.cpp ../../mainwindow.h \
 		../../httprequest.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QByteArray \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QString \
+		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
+		../../threadpool.h \
 		../../ui_mainwindow.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QVariant \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/QApplication \
@@ -1983,12 +2021,14 @@ mainwindow.o: ../../mainwindow.cpp ../../mainwindow.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDateTime \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qdatetime.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/qcalendar.h \
-		/home/iuli/Qt/6.8.1/gcc_64/include/QtCore/QDebug \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/QMessageBox \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/qmessagebox.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/qdialog.h \
 		/home/iuli/Qt/6.8.1/gcc_64/include/QtWidgets/qdialogbuttonbox.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../../mainwindow.cpp
+
+threadpool.o: ../../threadpool.cpp ../../threadpool.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o threadpool.o ../../threadpool.cpp
 
 moc_httpproxy.o: moc_httpproxy.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_httpproxy.o moc_httpproxy.cpp

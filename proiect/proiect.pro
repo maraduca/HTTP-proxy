@@ -12,12 +12,14 @@ SOURCES += \
     httpproxy.cpp \
     httprequest.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    threadpool.cpp
 
 HEADERS += \
     httpproxy.h \
     httprequest.h \
-    mainwindow.h
+    mainwindow.h \
+    threadpool.h
 
 FORMS += \
     httpproxy.ui \

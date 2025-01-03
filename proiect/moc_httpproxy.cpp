@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_HttpProxy_t {
-    QByteArrayData data[6];
-    char stringdata0[55];
+    QByteArrayData data[11];
+    char stringdata0[124];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -36,11 +36,18 @@ QT_MOC_LITERAL(0, 0, 9), // "HttpProxy"
 QT_MOC_LITERAL(1, 10, 10), // "logMessage"
 QT_MOC_LITERAL(2, 21, 0), // ""
 QT_MOC_LITERAL(3, 22, 3), // "msg"
-QT_MOC_LITERAL(4, 26, 15), // "onNewConnection"
-QT_MOC_LITERAL(5, 42, 12) // "handleClient"
+QT_MOC_LITERAL(4, 26, 13), // "responseReady"
+QT_MOC_LITERAL(5, 40, 11), // "QTcpSocket*"
+QT_MOC_LITERAL(6, 52, 12), // "clientSocket"
+QT_MOC_LITERAL(7, 65, 8), // "response"
+QT_MOC_LITERAL(8, 74, 20), // "sendResponseToClient"
+QT_MOC_LITERAL(9, 95, 15), // "onNewConnection"
+QT_MOC_LITERAL(10, 111, 12) // "handleClient"
 
     },
-    "HttpProxy\0logMessage\0\0msg\0onNewConnection\0"
+    "HttpProxy\0logMessage\0\0msg\0responseReady\0"
+    "QTcpSocket*\0clientSocket\0response\0"
+    "sendResponseToClient\0onNewConnection\0"
     "handleClient"
 };
 #undef QT_MOC_LITERAL
@@ -51,22 +58,26 @@ static const uint qt_meta_data_HttpProxy[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-       3,   14, // methods
+       5,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       1,       // signalCount
+       3,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    1,   29,    2, 0x06 /* Public */,
+       1,    1,   39,    2, 0x06 /* Public */,
+       4,    2,   42,    2, 0x06 /* Public */,
+       8,    2,   47,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       4,    0,   32,    2, 0x08 /* Private */,
-       5,    0,   33,    2, 0x08 /* Private */,
+       9,    0,   52,    2, 0x08 /* Private */,
+      10,    0,   53,    2, 0x08 /* Private */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QString,    3,
+    QMetaType::Void, 0x80000000 | 5, QMetaType::QByteArray,    6,    7,
+    QMetaType::Void, 0x80000000 | 5, QMetaType::QByteArray,    6,    7,
 
  // slots: parameters
     QMetaType::Void,
@@ -82,9 +93,29 @@ void HttpProxy::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         (void)_t;
         switch (_id) {
         case 0: _t->logMessage((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 1: _t->onNewConnection(); break;
-        case 2: _t->handleClient(); break;
+        case 1: _t->responseReady((*reinterpret_cast< QTcpSocket*(*)>(_a[1])),(*reinterpret_cast< const QByteArray(*)>(_a[2]))); break;
+        case 2: _t->sendResponseToClient((*reinterpret_cast< QTcpSocket*(*)>(_a[1])),(*reinterpret_cast< const QByteArray(*)>(_a[2]))); break;
+        case 3: _t->onNewConnection(); break;
+        case 4: _t->handleClient(); break;
         default: ;
+        }
+    } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        switch (_id) {
+        default: *reinterpret_cast<int*>(_a[0]) = -1; break;
+        case 1:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<int*>(_a[0]) = -1; break;
+            case 0:
+                *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< QTcpSocket* >(); break;
+            }
+            break;
+        case 2:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<int*>(_a[0]) = -1; break;
+            case 0:
+                *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< QTcpSocket* >(); break;
+            }
+            break;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
         int *result = reinterpret_cast<int *>(_a[0]);
@@ -92,6 +123,20 @@ void HttpProxy::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
             using _t = void (HttpProxy::*)(const QString & );
             if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&HttpProxy::logMessage)) {
                 *result = 0;
+                return;
+            }
+        }
+        {
+            using _t = void (HttpProxy::*)(QTcpSocket * , const QByteArray & );
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&HttpProxy::responseReady)) {
+                *result = 1;
+                return;
+            }
+        }
+        {
+            using _t = void (HttpProxy::*)(QTcpSocket * , const QByteArray & );
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&HttpProxy::sendResponseToClient)) {
+                *result = 2;
                 return;
             }
         }
@@ -127,13 +172,13 @@ int HttpProxy::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 5)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 5;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
-            *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 3;
+        if (_id < 5)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 5;
     }
     return _id;
 }
@@ -143,6 +188,20 @@ void HttpProxy::logMessage(const QString & _t1)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))) };
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
+}
+
+// SIGNAL 1
+void HttpProxy::responseReady(QTcpSocket * _t1, const QByteArray & _t2)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
+    QMetaObject::activate(this, &staticMetaObject, 1, _a);
+}
+
+// SIGNAL 2
+void HttpProxy::sendResponseToClient(QTcpSocket * _t1, const QByteArray & _t2)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
+    QMetaObject::activate(this, &staticMetaObject, 2, _a);
 }
 QT_WARNING_POP
 QT_END_MOC_NAMESPACE

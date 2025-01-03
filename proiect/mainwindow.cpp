@@ -31,7 +31,16 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+     if (process->state() == QProcess::Running) {
+            process->terminate(); // Încearcă să închidă browserul grațios
+            if (!process->waitForFinished(3000)) { // Așteaptă 3 secunde pentru a se închide
+                process->kill(); // Forțează închiderea dacă nu răspunde
+            }
+        }
+        delete process;
+        delete ui;
+
+
 }
 
 void MainWindow::setupLogTable()
@@ -87,26 +96,20 @@ void MainWindow::logMessage(const QString &msg)
 }
 
 
-
-
-
-
 void MainWindow::onLogTableCellClicked(int row, int column)
 {
     Q_UNUSED(column);
 
-    // Obține URL-ul cererii din tabel
+
     QTableWidgetItem *urlItem = ui->logTableWidget->item(row, 4); // Coloana URL
     if (!urlItem) return;
 
     QString url = urlItem->text();
 
-    // Caută cererea în cache
     QHash<QString, HttpRequest> cache = proxy->getCache();
     if (cache.contains(url)) {
         const HttpRequest &request = cache.value(url);
 
-        // Construiți detaliile complete ale cererii
         QString details;
         details += "Method: " + request.getMethod() + "\n";
         details += "URL: " + request.getUrl() + "\n\n";
@@ -119,7 +122,6 @@ void MainWindow::onLogTableCellClicked(int row, int column)
 
         details += "\nBody:\n" + QString::fromUtf8(request.getBody());
 
-        // Afișează detaliile în QTextEdit și face widget-ul vizibil
         ui->detailsTextEdit->setPlainText(details);
         ui->detailsTextEdit->setVisible(true);
     } else {
@@ -132,8 +134,7 @@ void MainWindow::onLogTableCellClicked(int row, int column)
 
 void MainWindow::displayCache()
 {
-    ui->logTableWidget->setRowCount(0); // Resetează tabelul
-
+    ui->logTableWidget->setRowCount(0);
     QHash<QString, HttpRequest> cache = proxy->getCache();
     for (auto it = cache.begin(); it != cache.end(); ++it) {
         const HttpRequest &request = it.value();
@@ -143,18 +144,13 @@ void MainWindow::displayCache()
 
         QString type = request.getUrl().startsWith("https://") ? "HTTPS" : "HTTP";
 
-        ui->logTableWidget->setItem(row, 0, new QTableWidgetItem(QDateTime::currentDateTime().toString())); // Timpul
-        ui->logTableWidget->setItem(row, 1, new QTableWidgetItem(type));      // Tipul (HTTP/HTTPS)
-        ui->logTableWidget->setItem(row, 2, new QTableWidgetItem("Cached"));  // Direcția (Cached)
-        ui->logTableWidget->setItem(row, 3, new QTableWidgetItem(request.getMethod())); // Metoda
-        ui->logTableWidget->setItem(row, 4, new QTableWidgetItem(request.getUrl()));    // URL-ul
+        ui->logTableWidget->setItem(row, 0, new QTableWidgetItem(QDateTime::currentDateTime().toString()));
+        ui->logTableWidget->setItem(row, 1, new QTableWidgetItem(type));
+        ui->logTableWidget->setItem(row, 2, new QTableWidgetItem("Cached"));
+        ui->logTableWidget->setItem(row, 3, new QTableWidgetItem(request.getMethod()));
+        ui->logTableWidget->setItem(row, 4, new QTableWidgetItem(request.getUrl()));
     }
 }
-
-
-
-
-
 
 
 
@@ -188,12 +184,53 @@ void MainWindow::on_firefoxButton_clicked()
 }
 
 
-void MainWindow::on_ForwardpushButton_clicked()
-{
+// void MainWindow::on_ForwardpushButton_clicked()
+// {
+//     int selectedRow = ui->logTableWidget->currentRow();
+
+//     if (selectedRow >= 0) {
+//         // Forward cerere selectată
+//         QTableWidgetItem *urlItem = ui->logTableWidget->item(selectedRow, 4);
+//         if (!urlItem) {
+//             QMessageBox::warning(this, "Error", "Failed to retrieve the selected request.");
+//             return;
+//         }
+
+//         QString url = urlItem->text();
+//         QHash<QString, HttpRequest> cache = proxy->getCache();
+
+//         if (cache.contains(url)) {
+//             HttpRequest request = cache.value(url);
+//             request.debugPrint();
+
+
+//             proxy->forwardRequest(request);
+
+
+//             ui->logTableWidget->removeRow(selectedRow);
+//             cache.remove(url);
+
+//             emit logMessage("Forwarded request: " + url);
+//         } else {
+//             QMessageBox::warning(this, "Error", "Request not found in cache.");
+//         }
+//     }
+//     else
+//     {
+
+//         proxy->forwardAllRequests();
+
+
+//         ui->logTableWidget->setRowCount(0);
+
+//         emit logMessage("Forwarded all requests.");
+//     }
+// }
+void MainWindow::on_ForwardpushButton_clicked() {
     int selectedRow = ui->logTableWidget->currentRow();
 
     if (selectedRow >= 0) {
-        // Forward cerere selectată
+        // Obține URL-ul cererii selectate
         QTableWidgetItem *urlItem = ui->logTableWidget->item(selectedRow, 4);
         if (!urlItem) {
             QMessageBox::warning(this, "Error", "Failed to retrieve the selected request.");
@@ -201,31 +238,23 @@ void MainWindow::on_ForwardpushButton_clicked()
         }
 
         QString url = urlItem->text();
-        QHash<QString, HttpRequest> cache = proxy->getCache();
+        HttpRequest request = proxy->getRequestFromCache(url); // Funcție pentru a obține cererea
 
-        if (cache.contains(url)) {
-            HttpRequest request = cache.value(url);
-            request.debugPrint(); // Loghează detalii cerere
+        if (!request.getUrl().isEmpty()) {
+            request.debugPrint();
 
-            // Forward cererea
+            // Apelăm forwardRequest
             proxy->forwardRequest(request);
 
-            // Șterge cererea din tabel și din cache
+            // Ștergem cererea din tabel
             ui->logTableWidget->removeRow(selectedRow);
-            cache.remove(url); // Asigură-te că cererea este ștearsă
 
             emit logMessage("Forwarded request: " + url);
         } else {
             QMessageBox::warning(this, "Error", "Request not found in cache.");
         }
     } else {
-        // Forward toate cererile din cache
-        proxy->forwardAllRequests();
-
-        // Golește tabelul
-        ui->logTableWidget->setRowCount(0);
-
-        emit logMessage("Forwarded all requests.");
+        QMessageBox::warning(this, "Error", "No request selected.");
     }
 }
 

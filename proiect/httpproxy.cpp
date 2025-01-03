@@ -9,9 +9,10 @@
 #include <QMessageBox>
 
 HttpProxy::HttpProxy(int port, QObject *parent)
-    : QObject(parent), server(new QTcpServer(this)), port(port)
+    : QObject(parent), server(new QTcpServer(this)), port(port), threadPool(5)
 {
     connect(server, &QTcpServer::newConnection, this, &HttpProxy::onNewConnection);
+
 }
 
 HttpProxy::~HttpProxy()
@@ -63,12 +64,19 @@ void HttpProxy::stop()
     emit logMessage("Server stopped.");
 }
 
-void HttpProxy::onNewConnection()
-{
-    QTcpSocket *clientSocket = server->nextPendingConnection();
+void HttpProxy::onNewConnection() {
+    clientSocket = server->nextPendingConnection();
     emit logMessage("New client connection established.");
+
+    // Conectează semnalele socket-ului clientului
     connect(clientSocket, &QTcpSocket::readyRead, this, &HttpProxy::handleClient);
     connect(clientSocket, &QTcpSocket::disconnected, clientSocket, &QTcpSocket::deleteLater);
+
+    // Resetăm referința la clientSocket când clientul se deconectează
+    connect(clientSocket, &QTcpSocket::disconnected, [this]() {
+        clientSocket = nullptr;
+        emit logMessage("Client disconnected.");
+    });
 }
 
 void HttpProxy::handleClient()
@@ -86,9 +94,86 @@ void HttpProxy::handleClient()
         return;
     }
 
+    // Adăugăm verificarea pentru cererile CONNECT (HTTPS)
+    // if (request.getMethod() == "CONNECT")
+    // {
+    //     emit logMessage("Handling CONNECT request for " + request.getUrl());
+    //     handleConnect(clientSocket, request); // Gestionează tunelarea
+    //     return;
+    // }
+
+    // Continuăm procesarea pentru cererile HTTP normale
     emit logMessage("Incoming " + request.getMethod() + " " + request.getUrl());
     handleHttpRequest(clientSocket, request);
 }
+
+
+void HttpProxy::handleConnect(QTcpSocket *clientSocket, const HttpRequest &request) {
+    // Extrage host-ul și portul din URL-ul CONNECT
+    QString host = request.getUrl().section(':', 0, 0);
+    quint16 port = request.getUrl().section(':', 1, 1).toUShort();
+
+    // Setează portul implicit dacă nu este specificat
+    if (port == 0) {
+        port = 443; // Port implicit pentru HTTPS
+    }
+
+    qDebug() << "Handling CONNECT request:";
+    qDebug() << "Host:" << host;
+    qDebug() << "Port:" << port;
+
+    QTcpSocket *serverSocket = new QTcpSocket(this);
+
+    // Conectează socket-ul către serverul țintă
+    serverSocket->connectToHost(host, port);
+    if (!serverSocket->waitForConnected(3000)) {
+        qDebug() << "Failed to connect to host:" << host << "on port:" << port;
+        emit logMessage("Failed to connect to " + host + ":" + QString::number(port));
+        clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+        clientSocket->disconnectFromHost();
+        serverSocket->deleteLater();
+        return;
+    }
+
+    qDebug() << "Successfully connected to host:" << host << "on port:" << port;
+
+    // Trimite răspunsul către browser: tunelul este gata
+    clientSocket->write("HTTP/1.1 200 Connection Established\r\n\r\n");
+    clientSocket->flush();
+
+    QObject::connect(clientSocket, &QTcpSocket::readyRead, [serverSocket, clientSocket]() {
+        QByteArray clientData = clientSocket->readAll();
+        if (!clientData.isEmpty()) {
+            serverSocket->write(clientData);
+            serverSocket->flush();
+        }
+    });
+
+    QObject::connect(serverSocket, &QTcpSocket::readyRead, [serverSocket, clientSocket]() {
+        QByteArray serverData = serverSocket->readAll();
+        if (!serverData.isEmpty()) {
+            clientSocket->write(serverData);
+            clientSocket->flush();
+        }
+    });
+
+
+
+    // Închide conexiunile când oricare parte se deconectează
+    QObject::connect(clientSocket, &QTcpSocket::disconnected, serverSocket, &QTcpSocket::disconnectFromHost);
+    QObject::connect(serverSocket, &QTcpSocket::disconnected, clientSocket, &QTcpSocket::disconnectFromHost);
+
+    // Gestionează erorile de conexiune
+    // connect(serverSocket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred),
+    //         [clientSocket, serverSocket](QAbstractSocket::SocketError socketError) {
+    //             qDebug() << "Error occurred with target server:" << socketError;
+    //             clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+    //             clientSocket->disconnectFromHost();
+    //             serverSocket->deleteLater();
+    //         });
+}
+
+
 
 void HttpProxy::handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &request)
 {
@@ -173,53 +258,60 @@ void HttpProxy::writeToFile(const HttpRequest &request, const QString &status)
     close(fd);
 }
 
-void HttpProxy::forwardRequest(const HttpRequest &request)
-{
-    QString url = request.getUrl();
-    QString host;
-    quint16 port = 80;
+void HttpProxy::forwardRequest(const HttpRequest &request) {
+    threadPool.addTask([this, request]() {
+        if (!clientSocket) {
+            qDebug() << "No client socket available.";
+            return;
+        }
 
-    if (url.startsWith("http://") || url.startsWith("https://"))
-    {
-        host = url.section('/', 2, 2).section(':', 0, 0);
-        port = (url.contains(':')) ? url.section(':', -1).toUShort() : (url.startsWith("https://") ? 443 : 80);
-    }
-    else
-    {
-        host = url.section(':', 0, 0);
-        port = url.section(':', 1, 1).toUShort();
-    }
+        QString url = request.getUrl();
+        QString host = url.section('/', 2, 2).section(':', 0, 0);
+        quint16 port = url.startsWith("https://") ? 443 : 80;
 
-    if (host.isEmpty())
-    {
-        emit logMessage("Failed to forward request: Invalid host.");
-        return;
-    }
+        QTcpSocket serverSocket;
+        qDebug() << "Forwarding request to:" << host << "on port:" << port;
 
-    QTcpSocket *serverSocket = new QTcpSocket(this);
-    serverSocket->connectToHost(host, port);
+        // Conectare la serverul țintă
+        serverSocket.connectToHost(host, port);
+        if (!serverSocket.waitForConnected(3000)) {
+            qDebug() << "Failed to connect to host:" << host;
+            clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+            //clientSocket->disconnectFromHost();
+            return;
+        }
 
-    if (!serverSocket->waitForConnected(5000))
-    {
-        emit logMessage("Failed to forward request to: " + host);
-        serverSocket->deleteLater();
-        return;
-    }
+        // Trimite cererea către serverul țintă
+        serverSocket.write(request.toRawRequest());
+        if (!serverSocket.waitForBytesWritten(3000)) {
+            qDebug() << "Failed to send request to:" << host;
+            clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+            //clientSocket->disconnectFromHost();
+            return;
+        }
 
-    serverSocket->write(request.toRawRequest());
-    serverSocket->waitForBytesWritten();
+        // Citește răspunsul de la server și transmite-l browserului
+        QByteArray response;
+        while (serverSocket.waitForReadyRead(5000)) {
+            response += serverSocket.readAll();
+        }
 
-    if (serverSocket->waitForReadyRead(5000))
-    {
-        QByteArray response = serverSocket->readAll();
-        emit logMessage("Forwarded response from: " + host);
-    }
+        if (!response.isEmpty()) {
+            qDebug() << "Forwarding response to client.";
+            clientSocket->write(response);
+            clientSocket->waitForBytesWritten();
+        } else {
+            qDebug() << "No response from host:" << host;
+            clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+        }
 
-    serverSocket->deleteLater();
-    writeToFile(request, "forwarded");
-    cache.remove(url);
-    emit logMessage("Request removed from cache: " + url);
+       // clientSocket->disconnectFromHost();
+       // serverSocket.close();
+    });
+
+    emit logMessage("Task added to Thread Pool for request: " + request.getUrl());
 }
+
 
 void HttpProxy::forwardAllRequests()
 {

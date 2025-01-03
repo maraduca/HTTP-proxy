@@ -55,12 +55,14 @@ OBJECTS_DIR   = ./
 SOURCES       = httpproxy.cpp \
 		httprequest.cpp \
 		main.cpp \
-		mainwindow.cpp moc_httpproxy.cpp \
+		mainwindow.cpp \
+		threadpool.cpp moc_httpproxy.cpp \
 		moc_mainwindow.cpp
 OBJECTS       = httpproxy.o \
 		httprequest.o \
 		main.o \
 		mainwindow.o \
+		threadpool.o \
 		moc_httpproxy.o \
 		moc_mainwindow.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -142,10 +144,12 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		proiect.pro httpproxy.h \
 		httprequest.h \
-		mainwindow.h httpproxy.cpp \
+		mainwindow.h \
+		threadpool.h httpproxy.cpp \
 		httprequest.cpp \
 		main.cpp \
-		mainwindow.cpp
+		mainwindow.cpp \
+		threadpool.cpp
 QMAKE_TARGET  = proiect
 DESTDIR       = 
 TARGET        = proiect
@@ -329,8 +333,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents httpproxy.h httprequest.h mainwindow.h $(DISTDIR)/
-	$(COPY_FILE) --parents httpproxy.cpp httprequest.cpp main.cpp mainwindow.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents httpproxy.h httprequest.h mainwindow.h threadpool.h $(DISTDIR)/
+	$(COPY_FILE) --parents httpproxy.cpp httprequest.cpp main.cpp mainwindow.cpp threadpool.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents httpproxy.ui mainwindow.ui $(DISTDIR)/
 
 
@@ -368,6 +372,7 @@ compiler_moc_header_clean:
 	-$(DEL_FILE) moc_httpproxy.cpp moc_mainwindow.cpp
 moc_httpproxy.cpp: httpproxy.h \
 		httprequest.h \
+		threadpool.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/iuli/proiect/HTTP-proxy/proiect/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/iuli/proiect/HTTP-proxy/proiect -I/home/iuli/proiect/HTTP-proxy/proiect -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include httpproxy.h -o moc_httpproxy.cpp
@@ -375,6 +380,7 @@ moc_httpproxy.cpp: httpproxy.h \
 moc_mainwindow.cpp: mainwindow.h \
 		httpproxy.h \
 		httprequest.h \
+		threadpool.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/iuli/proiect/HTTP-proxy/proiect/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/iuli/proiect/HTTP-proxy/proiect -I/home/iuli/proiect/HTTP-proxy/proiect -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/13 -I/usr/include/x86_64-linux-gnu/c++/13 -I/usr/include/c++/13/backward -I/usr/lib/gcc/x86_64-linux-gnu/13/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include mainwindow.h -o moc_mainwindow.cpp
@@ -405,7 +411,8 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean compiler_ui
 ####### Compile
 
 httpproxy.o: httpproxy.cpp httpproxy.h \
-		httprequest.h
+		httprequest.h \
+		threadpool.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o httpproxy.o httpproxy.cpp
 
 httprequest.o: httprequest.cpp httprequest.h
@@ -413,14 +420,19 @@ httprequest.o: httprequest.cpp httprequest.h
 
 main.o: main.cpp mainwindow.h \
 		httpproxy.h \
-		httprequest.h
+		httprequest.h \
+		threadpool.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 mainwindow.o: mainwindow.cpp mainwindow.h \
 		httpproxy.h \
 		httprequest.h \
+		threadpool.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o mainwindow.cpp
+
+threadpool.o: threadpool.cpp threadpool.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o threadpool.o threadpool.cpp
 
 moc_httpproxy.o: moc_httpproxy.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_httpproxy.o moc_httpproxy.cpp

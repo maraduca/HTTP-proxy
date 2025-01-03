@@ -49,7 +49,7 @@ public:
         firefoxButton->setGeometry(QRect(360, 590, 80, 23));
         logTableWidget = new QTableWidget(centralwidget);
         logTableWidget->setObjectName(QString::fromUtf8("logTableWidget"));
-        logTableWidget->setGeometry(QRect(0, 80, 721, 471));
+        logTableWidget->setGeometry(QRect(10, 80, 721, 471));
         detailsTextEdit = new QTextEdit(centralwidget);
         detailsTextEdit->setObjectName(QString::fromUtf8("detailsTextEdit"));
         detailsTextEdit->setEnabled(true);
