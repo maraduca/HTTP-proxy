@@ -1,57 +1,65 @@
 # HTTP-proxy
 
-# Proxy HTTP/HTTPS cu Blacklist
 
-## **Fluxul de Funcționare**
+## **Fluxul de Functionare**
 
 1. **Pornirea serverului**
-   - După apăsarea butonului **Start Server**, serverul se inițializează și încarcă lista de domenii blocate din fișierul `blocked_domains.txt`.
+   - Dupa apasarea butonului **Start Server**, serverul se initializeaza si incarca lista de domenii blocate din fisierul `blocked_domains.txt`.
 
 2. **Acceptarea conexiunilor**
-   - Proxy-ul acceptă noi conexiuni de la browser și creează un socket dedicat pentru fiecare client.
+   - Proxy-ul accepta noi conexiuni de la browser si creeaza un socket dedicat pentru fiecare client.
 
 3. **Primirea cererilor**
-   - Browser-ul trimite cereri HTTP sau HTTPS către proxy.
-   - Proxy-ul parsează cererile pentru a identifica metoda HTTP (ex. GET, POST) și URL-ul cerut.
+   - Browser-ul trimite cereri HTTP sau HTTPS catre proxy.
+   - Proxy-ul parseaza cererile pentru a identifica metoda HTTP (ex. GET, POST) si URL-ul cerut.
 
 4. **Verificarea blacklist-ului**
    - Domeniul cerut este comparat cu lista din `blocked_domains.txt`.
-   - **Dacă domeniul este blocat**, proxy-ul răspunde cu:
+   - **Daca domeniul este blocat**, proxy-ul raspunde cu:
      ```http
      HTTP/1.1 403 Forbidden
      ```
-   - **Dacă domeniul nu este blocat**, cererea este procesată mai departe.
+   - **Daca domeniul nu este blocat**, cererea este procesata mai departe.
 
 5. **Transmiterea cererilor**
-   - Cererile sunt trimise către serverul țintă:
+   - Cererile sunt trimise catre serverul tinta:
      - Prin **QTcpSocket** pentru HTTP.
      - Prin **QSslSocket** pentru HTTPS.
 
-6. **Transmiterea răspunsurilor**
-   - Proxy-ul primește răspunsul de la serverul țintă și îl transmite browser-ului client.
+6. **Transmiterea raspunsurilor**
+   - Proxy-ul primeste raspunsul de la serverul tinta si il transmite browser-ului client.
 
 7. **Logging**
-   - Detaliile fiecărei cereri și ale răspunsului sunt salvate în fișierul `firefox.txt` pe Desktop.
+   - Detaliile fiecarei cereri si ale raspunsului sunt salvate in fisierul `firefox.txt` pe Desktop.
 
 8. **Conexiuni multiple**
-   - Proxy-ul gestionează mai multe conexiuni simultane folosind un **ThreadPool**, ceea ce optimizează utilizarea resurselor.
+   - Proxy-ul gestioneaza mai multe conexiuni simultane folosind un **ThreadPool**, ceea ce optimizeaza utilizarea resurselor.
 
 ---
 
 ## **Exemple Demo**
 
-### **1. Cerere permisă**
+### **1. Cerere permisa**
 **URL:** `http://httpforever.com`
 
-- Proxy-ul verifică domeniul în blacklist și constată că nu este blocat.
-- Cererea este transmisă către serverul `example.com`.
-- Browser-ul primește răspunsul.
+- Proxy-ul verifica domeniul in blacklist si constata ca nu este blocat.
+- Cererea este transmisa catre serverul `httpforever.com`.
+- Browser-ul primeste raspunsul.
 
-### **2. Cerere blocată**
-**URL:** `http://ads.example.com`
+### **2. Cerere blocata**
+**URL:** `http://youtube.com`
 
-- Proxy-ul identifică domeniul `youtube.com` în lista de domenii blocate.
-- Răspunsul trimis către browser este:
+- Proxy-ul identifica domeniul `youtube.com` in lista de domenii blocate.
+- Raspunsul trimis catre browser este:
   ```http
   HTTP/1.1 403 Forbidden
+
+  ---
+
+## **Functionalitati care nu functioneaza complet**
+
+- **Raspunsuri mari**: Daca un raspuns depaseste o anumita dimensiune, aplicatia poate crapa.
+- **Logging incomplet**: Raspunsurile partiale nu sunt tot timpul salvate corect in fisierul de log.
+- **Headere fixe**: In acest moment, nu putem adauga, modifica sau sterge headerele trimise in cererile HTTP/HTTPS.
+
 
