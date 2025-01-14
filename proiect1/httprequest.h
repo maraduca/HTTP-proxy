@@ -7,11 +7,12 @@
 #include <QHash>
 #include <QDebug>
 
-class HttpRequest {
+class HttpRequest
+{
     QString method;
     QString url;
     QHash<QString, QString> headers;
-    QByteArray body; // Cererea inițială sau răspunsul serverului
+    QByteArray  body;
 
 public:
 
@@ -20,6 +21,7 @@ public:
 
     QString getMethod() const;
     QString getUrl() const;
+
     QHash<QString, QString> getHeaders() const;
     QByteArray getBody() const;
 
@@ -30,7 +32,7 @@ public:
     static HttpRequest parse(const QByteArray &rawRequest);
     static QHash<QString, QString> parseHeaders(const QByteArray &rawHeaders);
 
-    // Funcții pentru serializare
+  //pt serializare
     QByteArray headersToRaw() const;
     QByteArray toRawRequest() const;
     void debugPrint()const ;

@@ -8,6 +8,7 @@
 #include "httprequest.h"
 #include "threadpool.h"
 
+#include <QByteArray>
 
 class HttpProxy : public QObject
 {
@@ -21,20 +22,26 @@ public:
     void stop();
 
     QHash<QString, HttpRequest> getCache() const;
+
     void writeToFile(const HttpRequest &request, const QString &status);
 
     void forwardRequest(const HttpRequest &request);
     void forwardAllRequests();
     void handleConnect(QTcpSocket *clientSocket, const HttpRequest &request);
 
-    // QHash<QString, QTcpSocket*> getClientSockets() const {
-    //     return clientSockets; // Returnează lista socket-urilor clienților
+    QByteArray constructHttpRequest(const HttpRequest &request);
+
+    // QHash<QString, QTcpSocket*> getClientSockets() const
+    //{
+    //     return clientSockets;
     // }
-    HttpRequest getRequestFromCache(const QString &url) const {
+
+    HttpRequest getRequestFromCache(const QString &url) const
+    {
         if (cache.contains(url)) {
             return cache.value(url);
         }
-        return HttpRequest(); // Returnează o cerere goală dacă URL-ul nu este în cache
+        return HttpRequest();
     }
 
     ThreadPool &getThreadPool() { return threadPool; }
@@ -55,10 +62,14 @@ private:
        QTcpSocket *clientSocket;
 
     void handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &request);
+
     void addToCache(const HttpRequest &request);
     void handleConnectionFailure(QTcpSocket *clientSocket, const QString &host, const QString &error);
     bool shouldBlockRequest(const QString &url) ;
 
+    QStringList blockedDomains;
+    void loadBlockedDomains();
+    bool isDomainBlocked(const QString &url);
 
 
 

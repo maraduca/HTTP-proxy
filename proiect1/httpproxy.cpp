@@ -7,6 +7,8 @@
 #include <QDir>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QUrl>
+#include <QSslSocket>
 
 HttpProxy::HttpProxy(int port, QObject *parent)
     : QObject(parent), server(new QTcpServer(this)), port(port), threadPool(5)
@@ -23,6 +25,9 @@ HttpProxy::~HttpProxy()
 bool HttpProxy::start()
 {
     qDebug() << "Attempting to start server on port:" << port;
+
+        loadBlockedDomains();
+
     if (!server->listen(QHostAddress::Any, port))
     {
         qDebug() << "Failed to start server:" << server->errorString();
@@ -64,24 +69,25 @@ void HttpProxy::stop()
     emit logMessage("Server stopped.");
 }
 
-void HttpProxy::onNewConnection() {
+void HttpProxy::onNewConnection()
+{
     clientSocket = server->nextPendingConnection();
     emit logMessage("New client connection established.");
 
-    // Conectează semnalele socket-ului clientului
     connect(clientSocket, &QTcpSocket::readyRead, this, &HttpProxy::handleClient);
     connect(clientSocket, &QTcpSocket::disconnected, clientSocket, &QTcpSocket::deleteLater);
 
-    // Resetăm referința la clientSocket când clientul se deconectează
-    connect(clientSocket, &QTcpSocket::disconnected, [this]() {
-        clientSocket = nullptr;
-        emit logMessage("Client disconnected.");
-    });
+
+    // connect(clientSocket, &QTcpSocket::disconnected, [this]()
+    //  {
+    //     clientSocket = nullptr
+    //     emit logMessage("");
+    // });
 }
 
 void HttpProxy::handleClient()
 {
-    QTcpSocket *clientSocket = qobject_cast<QTcpSocket *>(sender());
+    QTcpSocket *clientSocket = qobject_cast <QTcpSocket *> (sender());
     if (!clientSocket) return;
 
     QByteArray requestData = clientSocket->readAll();
@@ -94,7 +100,6 @@ void HttpProxy::handleClient()
         return;
     }
 
-    // Adăugăm verificarea pentru cererile CONNECT (HTTPS)
     // if (request.getMethod() == "CONNECT")
     // {
     //     emit logMessage("Handling CONNECT request for " + request.getUrl());
@@ -102,20 +107,20 @@ void HttpProxy::handleClient()
     //     return;
     // }
 
-    // Continuăm procesarea pentru cererile HTTP normale
+
     emit logMessage("Incoming " + request.getMethod() + " " + request.getUrl());
     handleHttpRequest(clientSocket, request);
 }
 
 
-void HttpProxy::handleConnect(QTcpSocket *clientSocket, const HttpRequest &request) {
-    // Extrage host-ul și portul din URL-ul CONNECT
+void HttpProxy::handleConnect(QTcpSocket *clientSocket, const HttpRequest &request)
+{
+
     QString host = request.getUrl().section(':', 0, 0);
     quint16 port = request.getUrl().section(':', 1, 1).toUShort();
 
-    // Setează portul implicit dacă nu este specificat
     if (port == 0) {
-        port = 443; // Port implicit pentru HTTPS
+        port = 443;
     }
 
     qDebug() << "Handling CONNECT request:";
@@ -124,34 +129,42 @@ void HttpProxy::handleConnect(QTcpSocket *clientSocket, const HttpRequest &reque
 
     QTcpSocket *serverSocket = new QTcpSocket(this);
 
-    // Conectează socket-ul către serverul țintă
+
     serverSocket->connectToHost(host, port);
-    if (!serverSocket->waitForConnected(3000)) {
-        qDebug() << "Failed to connect to host:" << host << "on port:" << port;
-        emit logMessage("Failed to connect to " + host + ":" + QString::number(port));
+
+    if (! serverSocket->waitForConnected(3000))
+    {
+        qDebug() << "Failed to connect to host:" << host << "on port:"   << port;
+        emit logMessage("Failed to connect to " +  host + ":" + QString:: number(port)) ;
         clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+
         clientSocket->disconnectFromHost();
         serverSocket->deleteLater();
+
         return;
     }
 
     qDebug() << "Successfully connected to host:" << host << "on port:" << port;
 
-    // Trimite răspunsul către browser: tunelul este gata
     clientSocket->write("HTTP/1.1 200 Connection Established\r\n\r\n");
     clientSocket->flush();
 
-    QObject::connect(clientSocket, &QTcpSocket::readyRead, [serverSocket, clientSocket]() {
+    QObject::connect(clientSocket, &QTcpSocket::readyRead, [serverSocket, clientSocket]()
+        {
+
         QByteArray clientData = clientSocket->readAll();
-        if (!clientData.isEmpty()) {
+        if (! clientData.isEmpty())
+        {
             serverSocket->write(clientData);
             serverSocket->flush();
         }
     });
 
-    QObject::connect(serverSocket, &QTcpSocket::readyRead, [serverSocket, clientSocket]() {
+    QObject::connect(serverSocket, &QTcpSocket::readyRead, [serverSocket, clientSocket]()
+    {
         QByteArray serverData = serverSocket->readAll();
-        if (!serverData.isEmpty()) {
+        if (!serverData.isEmpty())
+        {
             clientSocket->write(serverData);
             clientSocket->flush();
         }
@@ -159,14 +172,15 @@ void HttpProxy::handleConnect(QTcpSocket *clientSocket, const HttpRequest &reque
 
 
 
-    // Închide conexiunile când oricare parte se deconectează
+    //inchid conex
     QObject::connect(clientSocket, &QTcpSocket::disconnected, serverSocket, &QTcpSocket::disconnectFromHost);
     QObject::connect(serverSocket, &QTcpSocket::disconnected, clientSocket, &QTcpSocket::disconnectFromHost);
 
-    // Gestionează erorile de conexiune
+
     // connect(serverSocket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::errorOccurred),
-    //         [clientSocket, serverSocket](QAbstractSocket::SocketError socketError) {
-    //             qDebug() << "Error occurred with target server:" << socketError;
+    //         [clientSocket, serverSocket](QAbstractSocket::SocketError socketError)
+    //{
+    //             qDebug() << "Error with target server:" << socketError;
     //             clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
     //             clientSocket->disconnectFromHost();
     //             serverSocket->deleteLater();
@@ -177,9 +191,20 @@ void HttpProxy::handleConnect(QTcpSocket *clientSocket, const HttpRequest &reque
 
 void HttpProxy::handleHttpRequest(QTcpSocket *clientSocket, const HttpRequest &request)
 {
+
     QString url = request.getUrl();
 
-    if (shouldBlockRequest(url)) {
+    //verif domeniiu in blacklist
+    if (isDomainBlocked(url))
+    {
+        emit logMessage("Blocked request to: " + url);
+        clientSocket->write("HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n");
+        clientSocket->disconnectFromHost();
+        return;
+    }
+
+    if (shouldBlockRequest(url))
+    {
         emit logMessage("Filtered out: " + url);
         clientSocket->write("HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n");
         clientSocket->disconnectFromHost();
@@ -210,13 +235,15 @@ void HttpProxy::writeToFile(const HttpRequest &request, const QString &status)
 {
     QString dirPath = "./logs";
     QDir dir(dirPath);
-    if (!dir.exists() && !dir.mkpath("."))
+
+    if (! dir.exists() && ! dir.mkpath("."))
     {
         qDebug() << "Failed to create logs directory!";
         return;
     }
 
     QString fileName = dirPath + "/" + QDateTime::currentDateTime().toString("yyyy-MM-dd") + ".log";
+
     int fd = open(fileName.toUtf8().constData(), O_WRONLY | O_CREAT | O_APPEND, 0644);
 
     if (fd < 0)
@@ -227,6 +254,7 @@ void HttpProxy::writeToFile(const HttpRequest &request, const QString &status)
 
     QByteArray data;
     data.append("Method: ").append(request.getMethod().toUtf8()).append("\n");
+
     data.append("URL: ").append(request.getUrl().toUtf8()).append("\n\n");
 
     const auto &headers = request.getHeaders();
@@ -246,6 +274,7 @@ void HttpProxy::writeToFile(const HttpRequest &request, const QString &status)
     data.append("\nBody:\n").append(request.getBody());
 
     ssize_t bytesWritten = write(fd, data.constData(), data.size());
+
     if (bytesWritten < 0)
     {
         perror("Failed to write to log file");
@@ -258,59 +287,145 @@ void HttpProxy::writeToFile(const HttpRequest &request, const QString &status)
     close(fd);
 }
 
-void HttpProxy::forwardRequest(const HttpRequest &request) {
-    threadPool.addTask([this, request]() {
-        if (!clientSocket) {
+void HttpProxy::forwardRequest(const HttpRequest &request)
+{
+    threadPool.addTask([this, request]()
+    {
+        if (!this->clientSocket) {
             qDebug() << "No client socket available.";
             return;
         }
 
         QString url = request.getUrl();
-        QString host = url.section('/', 2, 2).section(':', 0, 0);
-        quint16 port = url.startsWith("https://") ? 443 : 80;
+        if (!url.startsWith("http://") && !url.startsWith("https://"))
+        {
+            url = "http://" + url;
+        }
 
-        QTcpSocket serverSocket;
+        QUrl qurl(url);
+        QString host = qurl.host();
+        quint16 port = qurl.port() == -1 ? (qurl.scheme() == "https" ? 443 : 80) : qurl.port();
+
+        QTcpSocket *serverSocket = qurl.scheme() == "https" ? new QSslSocket(this) : new QTcpSocket(this);
+
         qDebug() << "Forwarding request to:" << host << "on port:" << port;
 
-        // Conectare la serverul țintă
-        serverSocket.connectToHost(host, port);
-        if (!serverSocket.waitForConnected(3000)) {
+        serverSocket->connectToHost(host, port);
+        if (!serverSocket->waitForConnected(5000))
+        {
             qDebug() << "Failed to connect to host:" << host;
-            clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
-            //clientSocket->disconnectFromHost();
+
+            this->clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+            this->clientSocket->disconnectFromHost();
+            serverSocket->deleteLater();
             return;
         }
 
-        // Trimite cererea către serverul țintă
-        serverSocket.write(request.toRawRequest());
-        if (!serverSocket.waitForBytesWritten(3000)) {
-            qDebug() << "Failed to send request to:" << host;
-            clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
-            //clientSocket->disconnectFromHost();
+        QByteArray requestData = constructHttpRequest(request);
+        serverSocket->write(requestData);
+        if (!serverSocket->waitForBytesWritten(5000))
+        {
+             qDebug() << "Failed to send request to:" << host;
+            this->clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+
+            this->clientSocket->disconnectFromHost();
+            serverSocket->deleteLater();
             return;
         }
 
-        // Citește răspunsul de la server și transmite-l browserului
         QByteArray response;
-        while (serverSocket.waitForReadyRead(5000)) {
-            response += serverSocket.readAll();
-        }
+        connect(serverSocket, &QTcpSocket::readyRead, this, [this, serverSocket, &response]()
+        {
+            QByteArray chunk = serverSocket->readAll();
+            response.append(chunk);
 
-        if (!response.isEmpty()) {
-            qDebug() << "Forwarding response to client.";
-            clientSocket->write(response);
-            clientSocket->waitForBytesWritten();
-        } else {
-            qDebug() << "No response from host:" << host;
-            clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
-        }
+            if (!chunk.isEmpty()) {
+                this->clientSocket->write(chunk);
+                this->clientSocket->flush();
+            }
+        });
 
-       // clientSocket->disconnectFromHost();
-       // serverSocket.close();
+        connect(serverSocket, &QTcpSocket::disconnected, this, [this, serverSocket]()
+            {
+            qDebug() << "Server socket disconnected.";
+            this->clientSocket->disconnectFromHost();
+            serverSocket->deleteLater();
+        });
+
+        connect(serverSocket, &QTcpSocket::errorOccurred, this, [this, serverSocket]()
+                {
+            qDebug() << "Error occurred with server socket:" << serverSocket->errorString();
+            this->clientSocket->write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
+            this->clientSocket->disconnectFromHost();
+            serverSocket->deleteLater();
+        });
     });
 
+
+
+
     emit logMessage("Task added to Thread Pool for request: " + request.getUrl());
+
 }
+
+
+QByteArray HttpProxy::constructHttpRequest(const HttpRequest &request)
+{
+    QUrl qurl(request.getUrl());
+    QByteArray requestData;
+
+    requestData.append(request.getMethod().toUtf8() + " " + qurl.path().toUtf8() + " HTTP/1.1\r\n");
+    requestData.append("Host: " + qurl.host().toUtf8() + "\r\n");
+
+    requestData.append("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n");
+    requestData.append("Connection: close\r\n\r\n");
+
+    return requestData;
+}
+
+void HttpProxy::loadBlockedDomains()
+{
+    QString filePath = QDir::homePath() + "/Desktop/blocked_domains.txt";
+    QFile file(filePath);
+
+    qDebug() << "Loading blocked domains from:" << filePath;
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed to load blocked domains file:" << file.errorString();
+        return;
+    }
+
+    blockedDomains.clear();
+
+    QTextStream in(&file);
+
+    while (!in.atEnd())
+    {
+        QString domain = in.readLine().trimmed();
+        if (!domain.isEmpty())
+        {
+            blockedDomains.append(domain);
+        }
+    }
+    qDebug() << "Loaded blocked domains:" << blockedDomains;
+}
+
+bool HttpProxy::isDomainBlocked(const QString &url)
+{
+    QUrl qurl(url);
+    QString host = qurl.host();
+    for (const QString &blockedDomain : blockedDomains)
+    {
+        if (host.contains(blockedDomain, Qt::CaseInsensitive))
+        {
+            return true;
+        }
+    }
+
+     return false;
+}
+
 
 
 void HttpProxy::forwardAllRequests()

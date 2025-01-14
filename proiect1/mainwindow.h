@@ -35,6 +35,8 @@ private:
     QProcess *process;
     bool serverRunning;
 
+     QList<QProcess*> firefoxProcesses;
+
     void setupLogTable();
 
     ThreadPool threadPool;

@@ -5,33 +5,38 @@ HttpRequest::HttpRequest(const QString &method, const QString &url,
                          const QByteArray &body)
     : method(method), url(url), headers(headers), body(body) {}
 
-QString HttpRequest::getMethod() const {
+QString HttpRequest::getMethod() const
+{
     return method;
 }
 
-QString HttpRequest::getUrl() const {
+QString HttpRequest::getUrl() const
+{
     return url;
 }
 
-QHash<QString, QString> HttpRequest::getHeaders() const {
+QHash<QString, QString> HttpRequest::getHeaders() const
+{
     return headers;
 }
 
-QByteArray HttpRequest::getBody() const {
+QByteArray HttpRequest::getBody() const
+{
     return body;
 }
 
-void HttpRequest::setBody(const QByteArray &newBody) {
+void HttpRequest::setBody(const QByteArray &newBody)
+{
     body = newBody;
 }
 
 void HttpRequest::debugPrint() const
 {
-    qDebug() << "HttpRequest Debug:";
-    qDebug() << "Method:" << method;
-    qDebug() << "URL:" << url;
-    qDebug() << "Headers:" << headers;
-    qDebug() << "Body size:" << body.size();
+    qDebug() << "httpRequest Debug";
+    qDebug() << "method" << method;
+    qDebug() << "URL" << url;
+    qDebug() << "headers" << headers;
+    qDebug() << "bodysize" << body.size();
 }
 
 
@@ -45,7 +50,7 @@ HttpRequest HttpRequest::parse(const QByteArray &rawRequest)
     if (headerEndIndex != -1)
     {
         QByteArray headerSection = rawRequest.left(headerEndIndex);
-        body = rawRequest.mid(headerEndIndex + 4);  // După \r\n\r\n
+        body = rawRequest.mid(headerEndIndex + 4);  // dupa \r\n\r\n
 
         headers = parseHeaders(headerSection);
     }
@@ -80,14 +85,18 @@ QHash<QString, QString> HttpRequest::parseHeaders(const QByteArray &rawHeaders)
         QByteArray line = lines[i].trimmed();
         if (line.isEmpty()) continue;
 
-        int separatorIndex = line.indexOf(':');
-        if (separatorIndex != -1)
+            int separatorIndex = line.indexOf(':');
+
+        if (separatorIndex !=  -1)
         {
             QString key = QString::fromUtf8(line.left(separatorIndex).trimmed());
+
             QString value = QString::fromUtf8(line.mid(separatorIndex + 1).trimmed());
+
             parsedHeaders.insert(key, value);
         }
     }
+
     return parsedHeaders;
 }
 

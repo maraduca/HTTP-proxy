@@ -8,21 +8,25 @@
 #include <condition_variable>
 #include <functional>
 
-class ThreadPool {
+class ThreadPool
+{
 public:
-    ThreadPool(size_t threadCount); // Constructor
-    ~ThreadPool();                 // Destructor
+    ThreadPool(size_t threadCount);
+    ~ThreadPool();
 
-    void addTask(const std::function<void()> &task); // Adaugă un task
+    void addTask(const std::function<void()> &task);
 
 private:
-    void workerThread(); // Funcția rulată de fiecare thread
 
-    std::vector<std::thread> threads;            // Vector de thread-uri
-    std::queue<std::function<void()>> tasks;     // Coada de task-uri
-    std::mutex queueMutex;                       // Mutex pentru protejarea cozii
-    std::condition_variable condition;           // Variabilă condițională
-    bool stop;                                   // Flag pentru oprirea thread-urilor
+    void workerThread();
+
+    std::vector<std::thread> threads;
+    std::queue<std::function<void()>> tasks;
+
+    std::mutex queueMutex;
+    std::condition_variable condition;
+
+    bool stop;
 };
 
 #endif // THREADPOOL_H
